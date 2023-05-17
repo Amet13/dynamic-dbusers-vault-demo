@@ -1,15 +1,18 @@
-# Dynamic DB users with Vault (DEMO)
+# Managing dynamic DB users with Vault (DEMO)
 
 ## Prerequisites
 
 - Docker
-- Terraform & Vault CLI tools (`brew install terraform vault`)
+- Terraform & Vault CLI tools:
 
-## Installation
+```bash
+brew install terraform vault
+```
 
-Ensure that the Docker daemon is in running mode.
+## Demo installation
 
-Deploy demo env with terraform:
+1. Ensure that the Docker daemon is in running mode.
+2. Deploy demo environment with Terraform (ensure that lines 9-14 in `main.tf` are commented):
 
 ```bash
 terraform init
@@ -18,11 +21,11 @@ terraform apply
 
 This module deploys multiple containers:
 
-- `vault` with Vault server
-- `jumphost` that we can use to access our DB containers
-- `db*` (depends on values in `terraform.tfvars`) MySQL containers
+- `vault` — Vault server
+- `jumphost` — Jumphost for getting access to our DB containers
+- `db*` — MySQL containers (the number of containers depends on values in `terraform.tfvars`)
 
-Go to `main.tf` and uncomment lines 9-14 (`vault` module block) and run apply again:
+3. Go to `main.tf` and uncomment lines 9-14 (`vault` module block) and run apply again:
 
 ```bash
 terraform apply
@@ -35,9 +38,9 @@ This module deploys Vault connections, policies, roles, etc.
 
 ## Demo
 
-After installation, we can log in to Vault with the root token by address http://127.0.0.1:8200
+After installation, we can log in to Vault with the root token by address: [`http://127.0.0.1:8200`](http://127.0.0.1:8200)
 
-Log in with (by default token is `root_token`):
+Log in to Vault with token `root_token`:
 
 ```bash
 export VAULT_ADDR=http://127.0.0.1:8200
@@ -52,9 +55,9 @@ A developer wants to connect to `db1` with read-only permissions.
 
 ```bash
 vault token create -policy=mysql-ro | grep 'hvs' | awk '{print $2}'
-hvs.CAESIOZwtgzKSBsN6plLQFgM-sc85OPvY-zLXRK6drnkDlNFGh4KHGh2cy5sUGloR1lWa25hVkpwbnk2NnMwYVBIZG0
+hvs.CAESIOZ...
 
-vault login hvs.CAESIOZwtgzKSBsN6plLQFgM-sc85OPvY-zLXRK6drnkDlNFGh4KHGh2cy5sUGloR1lWa25hVkpwbnk2NnMwYVBIZG0
+vault login hvs.CAESIOZ...
 ```
 
 2. Generate credentials for MySQL access to `db1`:
@@ -69,14 +72,14 @@ username           demo-db1-ro-1684351412-d2h
 
 ```bash
 vault write ssh/creds/ssh-developer username=developer ip=172.20.0.2 | grep "key "
-key                d113707e-8474-5243-6c54-41c754ce1f9f
+key                d113707e-8474-...
 ```
 
 4. Log in to Jumphost:
 
 ```bash
 ssh developer@localhost -p 2222
-developer@localhost's password: d113707e-8474-5243-6c54-41c754ce1f9f
+developer@localhost's password: d113707e-8474-...
 developer@jumphost:~$ 
 ```
 
@@ -108,10 +111,10 @@ vault login root_token
 
 ```bash
 vault token create -policy=mysql-rw | grep 'hvs' | awk '{print $2}'
-hvs.CAESIBGXasnvE9nVNMcF3M_Qq1YB5WPzCmRvnmQJF9HKMWuPGh4KHGh2cy5TemRTQm5UVWhsVWFXQjIxc2dSRHJMbVE
+hvs.CAESIBGX...
 ...
 
-vault login hvs.CAESIBGXasnvE9nVNMcF3M_Qq1YB5WPzCmRvnmQJF9HKMWuPGh4KHGh2cy5TemRTQm5UVWhsVWFXQjIxc2dSRHJMbVE
+vault login hvs.CAESIBGX...
 ```
 
 3. Generate credentials for MySQL access to `db2`:
@@ -125,15 +128,17 @@ username           demo-db2-rw-1684353122-S4X
 4. Generate credentials for access to Jumphost for `admin` (use `<jumphost_ip>` generated from terraform output):
 
 ```bash
-vault write ssh/creds/ssh-admin username=admin ip=172.20.0.2 | grep "key "
-key                df4d48ad-8b61-9172-6924-1d470b066537
+vault write ssh/creds/ssh-admin \
+    username=admin \
+    ip=172.20.0.2 | grep "key "
+key                df4d48ad-8b61-...
 ```
 
 5. Log in to Jumphost:
 
 ```bash
 ssh admin@localhost -p 2222
-developer@localhost's password: key                df4d48ad-8b61-9172-6924-1d470b066537
+developer@localhost's password: df4d48ad-8b61-...
 admin@jumphost:~$ sudo -i # admin user can impersonate root
 root@jumphost:~# exit
 ```

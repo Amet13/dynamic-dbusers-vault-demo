@@ -6,9 +6,9 @@ module "docker" {
 }
 
 # Uncomment this block before second `terraform apply`
-module "vault" {
-  source     = "./modules/vault"
-  depends_on = [module.docker]
+# module "vault" {
+#   source     = "./modules/vault"
+#   depends_on = [module.docker]
 
-  databases = var.databases
-}
+#   databases = var.databases
+# }
