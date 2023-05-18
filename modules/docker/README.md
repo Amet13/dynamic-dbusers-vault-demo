@@ -9,7 +9,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_docker"></a> [docker](#provider\_docker) | 3.0.2 |
+| <a name="provider_docker"></a> [docker](#provider\_docker) | ~> 3.0 |
 
 ## Modules
 
