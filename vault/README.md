@@ -3,13 +3,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_vault"></a> [vault](#requirement\_vault) | ~> 3.15 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | ~> 3.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_vault"></a> [vault](#provider\_vault) | ~> 3.15 |
+| <a name="provider_vault"></a> [vault](#provider\_vault) | ~> 3.0 |
 
 ## Modules
 
@@ -35,6 +36,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_databases"></a> [databases](#input\_databases) | n/a | <pre>map(object({<br>    username = string<br>    password = string<br>    host     = string<br>  }))</pre> | n/a | yes |
+| <a name="input_vault_root_token"></a> [vault\_root\_token](#input\_vault\_root\_token) | n/a | `string` | n/a | yes |
 
 ## Outputs
 
