@@ -16,5 +16,5 @@ jobs:
       with:
         working-dir: modules/docker,modules/vault
         output-file: README.md
-        output-method: inject
-        git-push: "true"
+        output-method: replace
+        fail-on-diff: true
