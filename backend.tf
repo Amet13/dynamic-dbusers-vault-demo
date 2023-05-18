@@ -1,7 +1,10 @@
 terraform {
+  required_version = "~> 1.0"
+
   backend "local" {
     path = "terraform.tfstate"
   }
+
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
@@ -9,7 +12,7 @@ terraform {
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 3.15"
+      version = "~> 3.0"
     }
   }
 }
