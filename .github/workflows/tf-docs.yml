@@ -10,11 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.pull_request.head.ref }}
+        ref: main
     - name: Render terraform docs and push changes back to PR
       uses: terraform-docs/gh-actions@v1.0.0
       with:
         working-dir: modules/docker,modules/vault
         output-file: README.md
-        output-method: replace
-        fail-on-diff: true
+        output-method: inject
+        git-push: true
