@@ -7,6 +7,5 @@ variable "databases" {
 }
 
 variable "vault_root_token" {
-  type      = string
-  sensitive = true
+  type = string
 }

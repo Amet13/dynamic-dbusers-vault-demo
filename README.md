@@ -5,47 +5,41 @@
 ## Prerequisites
 
 - Docker
-- Terraform & Vault CLI tools:
+- Terraform & Vault CLI tools, `jq`, `sshpass`:
 
 ```bash
-brew install terraform vault
+brew install terraform vault jq sshpass
 ```
 
-## Demo installation
+## Installation
 
-1. Ensure that the Docker daemon is in running mode
-2. Deploy this demo environment with Terraform:
+Ensure that the Docker daemon is in running mode and deploy this demo environment with Terraform:
 
 ```bash
-cd docker/
-terraform init
-terraform apply
-
-cd ../vault/
-terraform init
-terraform apply
-...
-Outputs:
-jumphost_ip = "<jumphost_ip>" # This is a Jumphost IP to be used later
+terraform -chdir=docker init && \
+    terraform -chdir=docker apply -auto-approve
+terraform -chdir=vault init && \
+    terraform -chdir=vault apply -auto-approve
 ```
 
-These modules deploy multiple containers:
+This demo creates a Vault server, Jumphost, multiple MySQL instances and Vault configuration.
 
-- `vault` — Vault server
-- `jumphost` — Jumphost for getting access to our DB containers
-- `db*` — MySQL containers
+Getting Vault root token and Jumphost IP that will be used in the Demo:
 
-Besides, it also deploys a necessary Vault configuration for Demo.
+```bash
+JUMPHOST_IP=$(terraform -chdir=docker output -raw jumphost_ip)
+VAULT_ROOT_TOKEN=$(terraform -chdir=docker output -raw vault_root_token)
+```
 
 ## Demo
 
-After installation, we can log in to Vault with the root token by address: [`http://127.0.0.1:8200`](http://127.0.0.1:8200)
+UI Vault is accessible by the link: [`http://127.0.0.1:8200`](http://127.0.0.1:8200/ui/)
 
-Log in to Vault CLI with token `root_token`:
+Log in to Vault CLI with token `VAULT_ROOT_TOKEN`:
 
 ```bash
 export VAULT_ADDR=http://127.0.0.1:8200
-vault login root_token
+vault login $VAULT_ROOT_TOKEN
 ```
 
 ### Scenario 1. Developer's read-only access to db1
@@ -55,43 +49,41 @@ A developer wants to connect to `db1` with read-only permissions.
 1. Create a token with `mysql-ro` policy and log in to the user:
 
 ```bash
-vault token create -policy=mysql-ro | grep 'hvs' | awk '{print $2}'
-hvs.CAESIOZ...
-
-vault login hvs.CAESIOZ...
+MYSQL_RO_TOKEN=$(vault token create -policy=mysql-ro -field token)
+vault login $MYSQL_RO_TOKEN
 ```
 
 2. Generate credentials for MySQL access to `db1`:
 
 ```bash
-vault read mysql/creds/db1-ro | grep "user\|pass"
-password           zTZ0-...
-username           demo-db1-ro-1684351412-d2h
+vault read mysql/creds/db1-ro
+# Remember the output for password and username, it's our dynamic MySQL user creds
 ```
 
-3. Generate credentials for access to Jumphost for `developer` (use `<jumphost_ip>` generated from terraform output):
+3. Generate SSH OTP for Jumphost for `developer`:
 
 ```bash
-vault write ssh/creds/ssh-developer \
+JUMPHOST_SSH_OTP=$(vault write -field=key \
+    ssh/creds/ssh-developer \
     username=developer \
-    ip=172.20.0.2 | grep "key "
-key                d113707e-8474-...
+    ip=$JUMPHOST_IP)
 ```
 
 4. Log in to Jumphost:
 
 ```bash
+echo $JUMPHOST_SSH_OTP
 ssh developer@localhost -p 2222
-developer@localhost's password: d113707e-8474-...
+developer@localhost's password: <paste_otp_from_previous_step_output>
 developer@jumphost:~$ 
 ```
 
-5. We are inside the Jumphost and we can connect to MySQL (`username` and `password` from step 2):
+5. We are inside the Jumphost and can connect to MySQL (`username` and `password` from step 2):
 
 ```bash
 mysql -h db1 \
-    -u demo-db1-ro-1684351412-d2h \
-    -pzTZ0-...
+    -u <username> \
+    -p<password>
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +---------------------------------------------------------+
 | Grants for demo-db1-ro-1684351412-d2h@%                 |
@@ -109,41 +101,39 @@ The administrator wants to connect to `db2` with all permissions.
 1. Let's switch back to the root token:
 
 ```bash
-vault login root_token
+vault login $VAULT_ROOT_TOKEN
 ```
 
 2. Create a token with `mysql-rw` policy and log in to the user:
 
 ```bash
-vault token create -policy=mysql-rw | grep 'hvs' | awk '{print $2}'
-hvs.CAESIBGX...
-
-vault login hvs.CAESIBGX...
+MYSQL_RW_TOKEN=$(vault token create -policy=mysql-ro -field token)
+vault login $MYSQL_RW_TOKEN
 ```
 
 3. Generate credentials for MySQL access to `db2`:
 
 ```bash
-vault read mysql/creds/db2-rw | grep "user\|pass"
-password           FnY9-...
-username           demo-db2-rw-1684353122-S4X
+vault read mysql/creds/db2-rw
+# Remember the output for password and username, it's our dynamic MySQL user creds
 ```
 
-4. Generate credentials for access to Jumphost for `admin` (use `<jumphost_ip>` generated from terraform output):
+4. Generate SSH OTP for Jumphost for `admin`:
 
 ```bash
-vault write ssh/creds/ssh-admin \
+JUMPHOST_SSH_OTP=$(vault write -field=key \
+    ssh/creds/ssh-admin \
     username=admin \
-    ip=172.20.0.2 | grep "key "
-key                df4d48ad-8b61-...
+    ip=$JUMPHOST_IP)
 ```
 
 5. Log in to Jumphost:
 
 ```bash
+echo $JUMPHOST_SSH_OTP
 ssh admin@localhost -p 2222
-developer@localhost's password: df4d48ad-8b61-...
-admin@jumphost:~$ sudo -i # admin user can be promoted to root on Jumphost
+developer@localhost's password: <paste_otp_from_previous_step_output>
+admin@jumphost:~$ sudo -i # admin user can be promoted to root
 root@jumphost:~# exit
 ```
 
@@ -151,8 +141,8 @@ root@jumphost:~# exit
 
 ```bash
 mysql -h db2 \
-    -u demo-db2-rw-1684353122-S4X \
-    -pFnY9-...
+    -u <username> \
+    -p<password>
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Grants for demo-db2-rw-1684353122-S4X@%                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -171,9 +161,5 @@ vault login root_token
 vault lease revoke -force -prefix mysql/creds/
 vault delete sys/mounts/mysql
 
-cd vault/
-terraform destroy
-
-cd docker/
-terraform destroy
+terraform -chdir=vault destroy -auto-approve && terraform -chdir=docker destroy -auto-approve
 ```
