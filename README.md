@@ -13,10 +13,13 @@ brew install terraform vault
 
 ## Demo installation
 
-1. Ensure that the Docker daemon is in running mode.
-2. Deploy demo environment with Terraform (ensure that lines 9-14 in `main.tf` are commented):
+1. Ensure that the Docker daemon is in running mode
+2. Deploy this demo environment with Terraform (ensure that lines 9-14 in [`main.tf`](main.tf#L9-L14) are commented):
 
 ```bash
+git clone https://github.com/Amet13/dynamic-dbusers-vault-demo.git
+cd dynamic-dbusers-vault-demo/
+
 terraform init
 terraform apply
 ```
@@ -25,15 +28,15 @@ This module deploys multiple containers:
 
 - `vault` — Vault server
 - `jumphost` — Jumphost for getting access to our DB containers
-- `db*` — MySQL containers (the number of containers depends on values in `terraform.tfvars`)
+- `db*` — MySQL containers (the number of containers depends on values set in `terraform.tfvars`, by default it's 2)
 
-3. Go to `main.tf` and uncomment lines 9-14 (`vault` module block) and run apply again:
+1. Go to [`main.tf`](main.tf#L9-L14) and uncomment lines 9-14 (`vault` module block) and run apply again:
 
 ```bash
 terraform apply
 ...
 Outputs:
-jumphost_ip = "<IP>" # This is a Jumphost IP to be used later
+jumphost_ip = "<jumphost_ip>" # This is a Jumphost IP to be used later
 ```
 
 This module deploys Vault connections, policies, roles, etc.
@@ -42,7 +45,7 @@ This module deploys Vault connections, policies, roles, etc.
 
 After installation, we can log in to Vault with the root token by address: [`http://127.0.0.1:8200`](http://127.0.0.1:8200)
 
-Log in to Vault with token `root_token`:
+Log in to Vault CLI with token `root_token`:
 
 ```bash
 export VAULT_ADDR=http://127.0.0.1:8200
@@ -66,14 +69,16 @@ vault login hvs.CAESIOZ...
 
 ```bash
 vault read mysql/creds/db1-ro | grep "user\|pass"
-password           zTZ0-RMnEgwLbj6OW9cx
+password           zTZ0-...
 username           demo-db1-ro-1684351412-d2h
 ```
 
 3. Generate credentials for access to Jumphost for `developer` (use `<jumphost_ip>` generated from terraform output):
 
 ```bash
-vault write ssh/creds/ssh-developer username=developer ip=172.20.0.2 | grep "key "
+vault write ssh/creds/ssh-developer \
+    username=developer \
+    ip=172.20.0.2 | grep "key "
 key                d113707e-8474-...
 ```
 
@@ -88,7 +93,9 @@ developer@jumphost:~$
 5. We are inside the Jumphost and we can connect to MySQL (`username` and `password` from step 2):
 
 ```bash
-mysql -h db1 -u demo-db1-ro-1684351412-d2h -pzTZ0-RMnEgwLbj6OW9cx
+mysql -h db1 \
+    -u demo-db1-ro-1684351412-d2h \
+    -pzTZ0-...
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +---------------------------------------------------------+
 | Grants for demo-db1-ro-1684351412-d2h@%                 |
@@ -114,7 +121,6 @@ vault login root_token
 ```bash
 vault token create -policy=mysql-rw | grep 'hvs' | awk '{print $2}'
 hvs.CAESIBGX...
-...
 
 vault login hvs.CAESIBGX...
 ```
@@ -123,7 +129,7 @@ vault login hvs.CAESIBGX...
 
 ```bash
 vault read mysql/creds/db2-rw | grep "user\|pass"
-password           F-nY92hxYW7hQjeQfm7Z
+password           FnY9-...
 username           demo-db2-rw-1684353122-S4X
 ```
 
@@ -141,14 +147,16 @@ key                df4d48ad-8b61-...
 ```bash
 ssh admin@localhost -p 2222
 developer@localhost's password: df4d48ad-8b61-...
-admin@jumphost:~$ sudo -i # admin user can impersonate root
+admin@jumphost:~$ sudo -i # admin user can be promoted to root on Jumphost
 root@jumphost:~# exit
 ```
 
 6. We are inside the Jumphost and we can connect to MySQL (`username` and `password` from step 2):
 
 ```bash
-mysql -h db2 -u demo-db2-rw-1684353122-S4X -pF-nY92hxYW7hQjeQfm7Z
+mysql -h db2 \
+    -u demo-db2-rw-1684353122-S4X \
+    -pFnY9-...
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Grants for demo-db2-rw-1684353122-S4X@%                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
