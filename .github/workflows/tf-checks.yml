@@ -21,7 +21,7 @@ jobs:
 
     - uses: terraform-docs/gh-actions@v1.0.0
       with:
-        working-dir: modules/docker,modules/vault
+        working-dir: docker,vault
         output-file: README.md
         output-method: inject
         git-push: true

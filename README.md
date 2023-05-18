@@ -1,4 +1,4 @@
-# Managing dynamic DB users with Vault (DEMO)
+# Managing dynamic DB users with Vault (Demo)
 
 [![Terraform checks](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml/badge.svg)](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml)
 
@@ -14,32 +14,28 @@ brew install terraform vault
 ## Demo installation
 
 1. Ensure that the Docker daemon is in running mode
-2. Deploy this demo environment with Terraform (ensure that lines 9-14 in [`main.tf`](main.tf#L9-L14) are commented):
+2. Deploy this demo environment with Terraform:
 
 ```bash
-git clone https://github.com/Amet13/dynamic-dbusers-vault-demo.git
-cd dynamic-dbusers-vault-demo/
-
+cd docker/
 terraform init
 terraform apply
-```
 
-This module deploys multiple containers:
-
-- `vault` — Vault server
-- `jumphost` — Jumphost for getting access to our DB containers
-- `db*` — MySQL containers (the number of containers depends on values set in `terraform.tfvars`, by default it's 2)
-
-1. Go to [`main.tf`](main.tf#L9-L14) and uncomment lines 9-14 (`vault` module block) and run apply again:
-
-```bash
+cd ../vault/
+terraform init
 terraform apply
 ...
 Outputs:
 jumphost_ip = "<jumphost_ip>" # This is a Jumphost IP to be used later
 ```
 
-This module deploys Vault connections, policies, roles, etc.
+These modules deploy multiple containers:
+
+- `vault` — Vault server
+- `jumphost` — Jumphost for getting access to our DB containers
+- `db*` — MySQL containers
+
+Besides, it also deploys a necessary Vault configuration for Demo.
 
 ## Demo
 
@@ -175,6 +171,9 @@ vault login root_token
 vault lease revoke -force -prefix mysql/creds/
 vault delete sys/mounts/mysql
 
+cd vault/
 terraform destroy
-# comment vault module block in main.tf
+
+cd docker/
+terraform destroy
 ```
