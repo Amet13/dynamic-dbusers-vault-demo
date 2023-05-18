@@ -1,5 +1,7 @@
 # Managing dynamic DB users with Vault (DEMO)
 
+[![Terraform checks](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml/badge.svg)](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml)
+
 ## Prerequisites
 
 - Docker
