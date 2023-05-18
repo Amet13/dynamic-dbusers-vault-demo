@@ -10,16 +10,16 @@ resource "docker_image" "mysql" {
 resource "docker_image" "ssh" {
   name = "vault-dbusers-demo-ssh:latest"
   build {
-    context = "modules/docker/files/"
+    context = "${path.module}/files/"
   }
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset(path.module, "module/docker/files/Dockerfile") : filesha1(f)]))
+    dir_sha1 = sha1(join("", [for f in fileset(path.module, "${path.module}/files/Dockerfile") : filesha1(f)]))
   }
 }
 
 # Docker network
 resource "docker_network" "demo" {
-  name = "demo"
+  name = "dynamic-dbusers-vault-demo"
 }
 
 # Docker containers
