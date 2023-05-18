@@ -5,10 +5,10 @@
 ## Prerequisites
 
 - Docker
-- Terraform & Vault CLI tools, `jq`, `sshpass`:
+- Terraform & Vault CLI tools:
 
 ```bash
-brew install terraform vault jq sshpass
+brew install terraform vault
 ```
 
 ## Installation
