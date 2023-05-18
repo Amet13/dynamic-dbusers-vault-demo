@@ -1,0 +1,27 @@
+name: Terraform checks
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+    - uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.4.6
+    - run: terraform fmt -check
+      continue-on-error: false
+    - run: terraform init
+    - run: terraform validate -no-color
+
+    - uses: terraform-docs/gh-actions@v1.0.0
+      with:
+        working-dir: modules/docker,modules/vault
+        output-file: README.md
+        output-method: inject
+        git-push: true
