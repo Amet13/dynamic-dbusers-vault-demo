@@ -42,4 +42,5 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_jumphost_ip"></a> [jumphost\_ip](#output\_jumphost\_ip) | The private IP address of the Jumphost. |
+| <a name="output_vault_root_token"></a> [vault\_root\_token](#output\_vault\_root\_token) | Vault root token. |
 <!-- END_TF_DOCS -->
