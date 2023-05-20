@@ -14,18 +14,9 @@ brew install terraform vault
 ## Installation
 
 Ensure that the Docker daemon is in running mode and deploy this demo environment with Terraform:
+In this demo, we create a Vault server, Jumphost, multiple MySQL instances and Vault configuration.
 
-```bash
-terraform -chdir=docker init && \
-    terraform -chdir=docker apply -auto-approve && \
-    sleep 15 # Waiting for MySQL readiness
-terraform -chdir=vault init && \
-    terraform -chdir=vault apply -auto-approve
-```
-
-This demo creates a Vault server, Jumphost, multiple MySQL instances and Vault configuration.
-
-Getting Vault root token and Jumphost IP that will be used in the Demo:
+Get the Vault root token and Jumphost IP, we will be use them in the Demo:
 
 ```bash
 JUMPHOST_IP=$(terraform -chdir=docker output -raw jumphost_ip)
@@ -52,8 +43,7 @@ A developer wants to connect to `db1` with read-only permissions.
 1. Create a token with `mysql-ro` policy and log in to the user:
 
 ```bash
-MYSQL_RO_TOKEN=$(vault token create -policy=mysql-ro -field token)
-vault login $MYSQL_RO_TOKEN
+vault login $(vault token create -policy=mysql-ro -field token)
 ```
 
 2. Generate credentials for MySQL access to `db1`:
@@ -72,7 +62,7 @@ JUMPHOST_SSH_OTP=$(vault write -field=key \
     ip=$JUMPHOST_IP)
 ```
 
-4. Log in to Jumphost:
+4. Log in to Jumphost with previously generated OTP:
 
 ```bash
 echo $JUMPHOST_SSH_OTP
@@ -81,7 +71,7 @@ developer@localhost's password: <paste_otp_from_previous_step_output>
 developer@jumphost:~$ 
 ```
 
-5. We are inside the Jumphost and can connect to MySQL (`username` and `password` from step 2):
+5. From the Jumphost we can connect to MySQL (`username` and `password` from step 2):
 
 ```bash
 mysql -h db1 \
@@ -99,7 +89,7 @@ As we can see, our dynamic user has only permissions for doing `SELECT` operatio
 
 ### Scenario 2. Admin's all privileges access to db2
 
-The administrator wants to connect to `db2` with all permissions.
+The admin wants to connect to `db2` with all permissions.
 
 1. Let's switch back to the root token:
 
@@ -110,8 +100,7 @@ vault login $VAULT_ROOT_TOKEN
 2. Create a token with `mysql-rw` policy and log in to the user:
 
 ```bash
-MYSQL_RW_TOKEN=$(vault token create -policy=mysql-ro -field token)
-vault login $MYSQL_RW_TOKEN
+vault login $(vault token create -policy=mysql-rw -field token)
 ```
 
 3. Generate credentials for MySQL access to `db2`:
@@ -130,7 +119,7 @@ JUMPHOST_SSH_OTP=$(vault write -field=key \
     ip=$JUMPHOST_IP)
 ```
 
-5. Log in to Jumphost:
+5. Log in to Jumphost with previously generated OTP:
 
 ```bash
 echo $JUMPHOST_SSH_OTP
@@ -140,7 +129,7 @@ admin@jumphost:~$ sudo -i # admin user can be promoted to root
 root@jumphost:~# exit
 ```
 
-6. We are inside the Jumphost and we can connect to MySQL (`username` and `password` from step 2):
+6. From the Jumphost we can connect to MySQL (`username` and `password` from step 3):
 
 ```bash
 mysql -h db2 \
@@ -160,9 +149,10 @@ As we can see, our dynamic user has all permissions, which means admin access.
 ## Cleanup
 
 ```bash
-vault login root_token
+vault login $VAULT_ROOT_TOKEN
 vault lease revoke -force -prefix mysql/creds/
 vault delete sys/mounts/mysql
 
-terraform -chdir=vault destroy -auto-approve && terraform -chdir=docker destroy -auto-approve
+terraform -chdir=vault destroy -auto-approve && \
+    terraform -chdir=docker destroy -auto-approve
 ```
