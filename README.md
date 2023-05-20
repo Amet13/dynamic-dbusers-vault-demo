@@ -17,7 +17,8 @@ Ensure that the Docker daemon is in running mode and deploy this demo environmen
 
 ```bash
 terraform -chdir=docker init && \
-    terraform -chdir=docker apply -auto-approve
+    terraform -chdir=docker apply -auto-approve && \
+    sleep 15 # Waiting for MySQL readiness
 terraform -chdir=vault init && \
     terraform -chdir=vault apply -auto-approve
 ```
@@ -32,6 +33,8 @@ VAULT_ROOT_TOKEN=$(terraform -chdir=docker output -raw vault_root_token)
 ```
 
 ## Demo
+
+![](image.png)
 
 UI Vault is accessible by the link: [`http://127.0.0.1:8200`](http://127.0.0.1:8200/ui/)
 
