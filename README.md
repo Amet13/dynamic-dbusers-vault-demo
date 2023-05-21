@@ -16,7 +16,15 @@ brew install terraform vault
 Ensure that the Docker daemon is in running mode and deploy this demo environment with Terraform:
 In this demo, we create a Vault server, Jumphost, multiple MySQL instances and Vault configuration.
 
-Get the Vault root token and Jumphost IP, we will be use them in the Demo:
+```bash
+terraform -chdir=docker init && \
+    terraform -chdir=docker apply -auto-approve && \
+    sleep 15 # Waiting for MySQL readiness
+terraform -chdir=vault init && \
+    terraform -chdir=vault apply -auto-approve
+```
+
+Get the Vault root token and Jumphost IP, we will be using them in the Demo:
 
 ```bash
 JUMPHOST_IP=$(terraform -chdir=docker output -raw jumphost_ip)
@@ -74,9 +82,7 @@ developer@jumphost:~$
 5. From the Jumphost we can connect to MySQL (`username` and `password` from step 2):
 
 ```bash
-mysql -h db1 \
-    -u <username> \
-    -p<password>
+mysql -h db1 -u <username> -p<password>
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +---------------------------------------------------------+
 | Grants for demo-db1-ro-1684351412-d2h@%                 |
@@ -85,11 +91,11 @@ mysql> SHOW GRANTS FOR CURRENT_USER;
 +---------------------------------------------------------+
 ```
 
-As we can see, our dynamic user has only permissions for doing `SELECT` operations, which means read-only.
+As we can see, our dynamic user has only permissions for making `SELECT` operations.
 
-### Scenario 2. Admin's all privileges access to db2
+### Scenario 2. Admin's read-write privileges access to db2
 
-The admin wants to connect to `db2` with all permissions.
+An admin wants to connect to `db2` with read-write permissions.
 
 1. Let's switch back to the root token:
 
@@ -132,9 +138,7 @@ root@jumphost:~# exit
 6. From the Jumphost we can connect to MySQL (`username` and `password` from step 3):
 
 ```bash
-mysql -h db2 \
-    -u <username> \
-    -p<password>
+mysql -h db2 -u <username> -p<password>
 mysql> SHOW GRANTS FOR CURRENT_USER;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Grants for demo-db2-rw-1684353122-S4X@%                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -144,7 +148,7 @@ mysql> SHOW GRANTS FOR CURRENT_USER;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 ```
 
-As we can see, our dynamic user has all permissions, which means admin access.
+As we can see, our dynamic user has all permissions.
 
 ## Cleanup
 

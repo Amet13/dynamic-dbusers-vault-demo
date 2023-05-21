@@ -3,7 +3,9 @@ FROM ubuntu:22.04
 ENV VSH_VERSION="0.2.1"
 
 RUN apt update && \
-    apt install -y openssh-server unzip sudo mysql-client && \
+    apt install -y openssh-server unzip sudo mysql-client locales && \
+    locale-gen en_US.UTF-8 && \
+    chmod -R 0644 /etc/update-motd.d/ && \
     wget -q https://releases.hashicorp.com/vault-ssh-helper/${VSH_VERSION}/vault-ssh-helper_${VSH_VERSION}_linux_arm.zip && \
     unzip vault-ssh-helper_${VSH_VERSION}_linux_arm.zip -d /usr/local/bin/ && \
     mkdir /etc/vault-helper.d/ /var/run/sshd/ && \
