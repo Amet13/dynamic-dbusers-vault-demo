@@ -1,4 +1,4 @@
-# Managing dynamic DB users with Vault (Demo)
+# Managing dynamic DB users with Vault (demo)
 
 [![Terraform checks](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml/badge.svg)](https://github.com/Amet13/dynamic-dbusers-vault-demo/actions/workflows/tf-checks.yml)
 
@@ -24,7 +24,7 @@ terraform -chdir=vault init && \
     terraform -chdir=vault apply -auto-approve
 ```
 
-Get the Vault root token and Jumphost IP, we will be using them in the Demo:
+Get the Vault root token and Jumphost IP, we will be using them in the demo:
 
 ```bash
 JUMPHOST_IP=$(terraform -chdir=docker output -raw jumphost_ip)

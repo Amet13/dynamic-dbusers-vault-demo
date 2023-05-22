@@ -7,7 +7,6 @@ resource "vault_audit" "log" {
   }
 }
 
-
 # DB engine
 resource "vault_mount" "mysql" {
   path = "mysql"
